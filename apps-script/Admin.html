@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VOID X VPN Admin</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --red: #ff2448;
+      --red2: #a90025;
+      --bg: #08090d;
+      --panel: #11131b;
+      --panel2: #171923;
+      --border: #292b38;
+      --text: #f5f5f7;
+      --muted: #9295a5;
+      --green: #28d99a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .hidden { display: none !important; }
+
+    .login-screen {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background:
+        radial-gradient(circle at 50% 45%, #4a001b55, transparent 42%),
+        linear-gradient(135deg, #08090d, #120812);
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 410px;
+      padding: 35px;
+      border: 1px solid #8c1638;
+      border-radius: 18px;
+      background: #101019ee;
+      box-shadow: 0 0 45px #ff174422;
+    }
+
+    .brand {
+      font-family: Orbitron, sans-serif;
+      color: var(--red);
+      font-size: 23px;
+      font-weight: 800;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--muted);
+      margin: 12px 0 28px;
+      letter-spacing: 2px;
+    }
+
+    .field { margin-bottom: 17px; }
+
+    label {
+      display: block;
+      color: #c8c8d2;
+      margin-bottom: 7px;
+      font-weight: 600;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      color: white;
+      background: #090b12;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 12px #ff244822;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 8px;
+      padding: 11px 16px;
+      color: white;
+      font-weight: 700;
+      background: linear-gradient(110deg, #d00035, #ff3153);
+      transition: .2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px #ff244444;
+    }
+
+    .btn:disabled { opacity: .5; cursor: wait; }
+    .btn-secondary { background: #292c39; }
+    .btn-danger { background: #76152a; }
+
+    .btn-small {
+      padding: 6px 10px;
+      font-size: 13px;
+      margin: 2px;
+    }
+
+    .login-card .btn { width: 100%; }
+
+    .message {
+      margin-top: 14px;
+      text-align: center;
+      color: var(--red);
+      min-height: 20px;
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 245px;
+      flex-shrink: 0;
+      padding: 25px 15px;
+      background: #0d0e15;
+      border-right: 1px solid var(--border);
+    }
+
+    .sidebar .brand {
+      font-size: 17px;
+      margin: 8px 0 35px;
+    }
+
+    .nav-label {
+      color: #6d7080;
+      font-size: 12px;
+      letter-spacing: 2px;
+      padding: 10px;
+    }
+
+    .nav-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-align: left;
+      padding: 13px;
+      border: 1px solid transparent;
+      border-radius: 9px;
+      background: transparent;
+      color: #aeb0bd;
+      margin: 5px 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .nav-btn:hover, .nav-btn.active {
+      color: white;
+      background: #34101d;
+      border-color: #79203a;
+    }
+
+    .nav-btn.active { color: #ff647f; }
+
+    .sidebar-bottom {
+      margin-top: 35px;
+      padding: 10px;
+    }
+
+    .main {
+      min-width: 0;
+      flex: 1;
+      padding: 28px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 28px;
+    }
+
+    h1, h2, h3 { margin-top: 0; }
+
+    h1 {
+      font-family: Orbitron, sans-serif;
+      font-size: 21px;
+    }
+
+    .muted { color: var(--muted); }
+
+    .status {
+      color: var(--green);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .stat-card, .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .stat-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card:after {
+      content: "";
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      right: -30px;
+      bottom: -35px;
+      background: #ff244820;
+      filter: blur(15px);
+      border-radius: 50%;
+    }
+
+    .stat-number {
+      display: block;
+      font-family: Orbitron, sans-serif;
+      font-size: 29px;
+      color: var(--red);
+      margin-top: 10px;
+    }
+
+    .panel { margin-bottom: 20px; }
+
+    .panel h2 {
+      font-size: 19px;
+      margin-bottom: 18px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 13px;
+    }
+
+    .form-grid .full { grid-column: 1 / -1; }
+
+    .form-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 620px;
+    }
+
+    th, td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      font-size: 15px;
+    }
+
+    th {
+      color: #ff6b83;
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+
+    td { color: #d6d6df; }
+
+    .pill {
+      display: inline-block;
+      border-radius: 30px;
+      padding: 3px 9px;
+      background: #30202a;
+      color: #ff8296;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .pill.green {
+      background: #103328;
+      color: #4ce3ae;
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 25px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      max-width: 340px;
+      background: #202330;
+      border: 1px solid #45485a;
+      padding: 14px 18px;
+      border-radius: 9px;
+      z-index: 99;
+      box-shadow: 0 10px 30px #0008;
+    }
+
+    .toast.error { border-color: var(--red); }
+    .mobile-menu { display: none; }
+
+    @media(max-width: 950px) {
+      .cards { grid-template-columns: repeat(2, 1fr); }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    @media(max-width: 650px) {
+      .layout { display: block; }
+
+      .sidebar {
+        display: none;
+        width: 100%;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .sidebar.open { display: block; }
+      .mobile-menu { display: inline-block; }
+      .main { padding: 17px; }
+      .cards { grid-template-columns: 1fr 1fr; gap: 9px; }
+      .stat-card { padding: 14px; }
+      .stat-number { font-size: 22px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid .full { grid-column: auto; }
+      .login-card { padding: 25px 20px; }
+      h1 { font-size: 17px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- LOGIN PAGE -->
+  <section id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="brand">⚡ VOID X VPN ⚡</div>
+      <div class="subtitle">ADMIN CONTROL CENTER</div>
+
+      <form id="loginForm">
+        <div class="field">
+          <label>Admin Username</label>
+          <input id="username" autocomplete="username" required>
+        </div>
+
+        <div class="field">
+          <label>Admin Password</label>
+          <input id="password" type="password"
+                 autocomplete="current-password" required>
+        </div>
+
+        <button class="btn" id="loginButton" type="submit">
+          ACCESS DASHBOARD
+        </button>
+      </form>
+
+      <div id="loginMessage" class="message"></div>
+      <p class="muted" style="text-align:center;font-size:13px">
+        SECURE ADMIN AUTHENTICATION
+      </p>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="dashboard" class="layout hidden">
+
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">⚡ VOID X VPN</div>
+
+      <div class="nav-label">CONTROL PANEL</div>
+
+      <button class="nav-btn active" data-page="overview">
+        ◈ Overview
+      </button>
+
+      <button class="nav-btn" data-page="packages">
+        ▣ Packages
+      </button>
+
+      <button class="nav-btn" data-page="configs">
+        ⚙ Configurations
+      </button>
+
+      <div class="sidebar-bottom">
+        <div class="muted">ADMIN STATUS</div>
+        <div class="status">● SYSTEM ONLINE</div>
+        <br>
+        <button class="btn btn-secondary" style="width:100%"
+                onclick="logout()">
+          LOGOUT
+        </button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <button class="btn btn-secondary mobile-menu"
+                  onclick="toggleMenu()">☰</button>
+          <h1 id="pageTitle">ADMIN OVERVIEW</h1>
+          <div class="muted">VOID X VPN™ MANAGEMENT SYSTEM</div>
+        </div>
+        <div class="status">● CONNECTED</div>
+      </div>
+
+      <!-- OVERVIEW -->
+      <section id="page-overview" class="page">
+        <div class="cards">
+          <div class="stat-card">
+            <span class="muted">TOTAL PACKAGES</span>
+            <strong class="stat-number" id="totalPackages">0</strong>
+          </div>
+
+          <div class="stat-card">
+            <span class="muted">TOTAL CONFIGS</span>
+            <strong class="stat-number" id="totalConfigs">0</strong>
+          </div>
+
+          <div class="stat-card">
+            <span class="muted">ACTIVE PACKAGES</span>
+            <strong class="stat-number" id="activePackages">0</strong>
+          </div>
+
+          <div class="stat-card">
+            <span class="muted">ACTIVE CONFIGS</span>
+            <strong class="stat-number" id="activeConfigs">0</strong>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <h2>NETWORK OVERVIEW</h2>
+            <div id="networkStats"></div>
+          </div>
+
+          <div class="panel">
+            <h2>SYSTEM INFORMATION</h2>
+            <p>Brand: <strong>VOID X VPN™</strong></p>
+            <p>Database: <span class="status">Google Sheets</span></p>
+            <p>Admin Panel: <span class="status">Online</span></p>
+            <p class="muted">Use the sidebar to manage packages and configs.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- PACKAGES -->
+      <section id="page-packages" class="page hidden">
+        <div class="panel">
+          <h2 id="packageFormTitle">ADD NEW PACKAGE</h2>
+
+          <form id="packageForm">
+            <input type="hidden" id="packageId">
+
+            <div class="form-grid">
+              <div class="field">
+                <label>Network</label>
+                <select id="packageNetwork" required>
+                  <option value="">Select Network</option>
+                  <option>DIALOG</option>
+                  <option>MOBITEL</option>
+                  <option>HUTCH</option>
+                  <option>AIRTEL</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Access Type</label>
+                <select id="packageAccess" required>
+                  <option value="">Select Type</option>
+                  <option>FREE</option>
+                  <option>PAID</option>
+                </select>
+              </div>
+
+              <div class="field full">
+                <label>Package Name</label>
+                <input id="packageName" required
+                       placeholder="Enter package name">
+              </div>
+
+              <div class="field full">
+                <label>Description</label>
+                <textarea id="packageDescription"
+                          placeholder="Package description"></textarea>
+              </div>
+
+              <!-- PAID PACKAGE FIELDS -->
+              <div id="paidFields" class="form-grid full hidden">
+                <div class="field">
+                  <label>Data Amount</label>
+                  <input id="packageDataAmount"
+                         type="text"
+                         placeholder="Example: 25GB">
+                </div>
+
+                <div class="field">
+                  <label>Price (LKR)</label>
+                  <input id="packagePrice"
+                         type="number"
+                         min="0.01"
+                         step="0.01"
+                         placeholder="Example: 500">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn" type="submit" id="packageSave">
+                ADD PACKAGE
+              </button>
+              <button class="btn btn-secondary" type="button"
+                      onclick="resetPackageForm()">CLEAR</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel">
+          <h2>ALL PACKAGES</h2>
+          <div class="table-wrap" id="packageTable"></div>
+        </div>
+      </section>
+
+      <!-- CONFIGS -->
+      <section id="page-configs" class="page hidden">
+        <div class="panel">
+          <h2 id="configFormTitle">ADD NEW CONFIGURATION</h2>
+
+          <form id="configForm">
+            <input type="hidden" id="configId">
+
+            <div class="form-grid">
+              <div class="field full">
+                <label>Select Package</label>
+                <select id="configPackage" required>
+                  <option value="">Select a package</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Config Type</label>
+                <select id="configType" required>
+                  <option value="">Select Type</option>
+                  <option>CODE</option>
+                  <option>EHI</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Config Name</label>
+                <input id="configName" required
+                       placeholder="Config name">
+              </div>
+
+              <div class="field full">
+                <label>Config Content</label>
+                <textarea id="configContent" required
+                          placeholder="Paste your CODE / EHI content here"></textarea>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn" type="submit" id="configSave">
+                ADD CONFIG
+              </button>
+              <button class="btn btn-secondary" type="button"
+                      onclick="resetConfigForm()">CLEAR</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel">
+          <h2>ALL CONFIGURATIONS</h2>
+          <div class="table-wrap" id="configTable"></div>
+        </div>
+      </section>
+
+    </main>
+  </section>
+
+  <div id="toast" class="toast hidden"></div>
+
+<script>
+  let adminToken = "";
+  let adminData = { packages: [], configs: [] };
+
+  const $ = id => document.getElementById(id);
+
+  function callServer(method, ...args) {
+    return new Promise((resolve, reject) => {
+      google.script.run
+        .withSuccessHandler(resolve)
+        .withFailureHandler(error => reject(
+          new Error(error && error.message ? error.message : String(error))
+        ))[method](...args);
+    });
+  }
+
+  function showToast(message, isError = false) {
+    const box = $("toast");
+    box.textContent = message;
+    box.classList.remove("hidden", "error");
+
+    if (isError) box.classList.add("error");
+
+    setTimeout(() => box.classList.add("hidden"), 3500);
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[char]);
+  }
+
+  // LOGIN
+  $("loginForm").addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const button = $("loginButton");
+    button.disabled = true;
+    button.textContent = "AUTHENTICATING...";
+    $("loginMessage").textContent = "";
+
+    try {
+      const result = await callServer(
+        "adminLogin",
+        $("username").value.trim(),
+        $("password").value
+      );
+
+      if (!result || !result.success) {
+        throw new Error(result?.message || "Login failed.");
+      }
+
+      adminToken = result.token;
+      $("loginScreen").classList.add("hidden");
+      $("dashboard").classList.remove("hidden");
+
+      await loadData();
+      showToast("Welcome to VOID X VPN Admin Dashboard");
+
+    } catch (error) {
+      $("loginMessage").textContent = error.message;
+    } finally {
+      button.disabled = false;
+      button.textContent = "ACCESS DASHBOARD";
+    }
+  });
+
+  // LOAD DATABASE
+  async function loadData() {
+    const data = await callServer("getAdminData", adminToken);
+
+    adminData = {
+      packages: Array.isArray(data?.packages) ? data.packages : [],
+      configs: Array.isArray(data?.configs) ? data.configs : []
+    };
+
+    renderDashboard();
+    renderPackages();
+    renderConfigs();
+    updatePackageDropdown();
+  }
+
+  function renderDashboard() {
+    const packages = adminData.packages;
+    const configs = adminData.configs;
+
+    $("totalPackages").textContent = packages.length;
+    $("totalConfigs").textContent = configs.length;
+
+    $("activePackages").textContent =
+      packages.filter(item => item.active).length;
+
+    $("activeConfigs").textContent =
+      configs.filter(item => item.active).length;
+
+    const networks = ["DIALOG", "MOBITEL", "HUTCH", "AIRTEL"];
+
+    $("networkStats").innerHTML = networks.map(network => {
+      const count = packages.filter(
+        item => item.network === network
+      ).length;
+
+      return `
+        <div style="display:flex;justify-content:space-between;
+                    padding:12px 0;border-bottom:1px solid #292b38">
+          <strong>${network}</strong>
+          <span class="pill">${count} Packages</span>
+        </div>`;
+    }).join("");
+  }
+
+  // NAVIGATION
+  document.querySelectorAll(".nav-btn").forEach(button => {
+    button.addEventListener("click", () => {
+      openPage(button.dataset.page);
+      $("sidebar").classList.remove("open");
+    });
+  });
+
+  function openPage(page) {
+    document.querySelectorAll(".page").forEach(section => {
+      section.classList.add("hidden");
+    });
+
+    document.querySelectorAll(".nav-btn").forEach(button => {
+      button.classList.toggle(
+        "active",
+        button.dataset.page === page
+      );
+    });
+
+    $("page-" + page).classList.remove("hidden");
+
+    const titles = {
+      overview: "ADMIN OVERVIEW",
+      packages: "PACKAGE MANAGEMENT",
+      configs: "CONFIGURATION MANAGEMENT"
+    };
+
+    $("pageTitle").textContent = titles[page] || "ADMIN DASHBOARD";
+  }
+
+  function toggleMenu() {
+    $("sidebar").classList.toggle("open");
+  }
+
+  // PAID FIELD VISIBILITY
+  function togglePaidFields() {
+    const isPaid = $("packageAccess").value === "PAID";
+    $("paidFields").classList.toggle("hidden", !isPaid);
+
+    $("packageDataAmount").required = isPaid;
+    $("packagePrice").required = isPaid;
+  }
+
+  $("packageAccess").addEventListener("change", togglePaidFields);
+
+  // PACKAGE MANAGEMENT
+  $("packageForm").addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const id = $("packageId").value;
+    const accessType = $("packageAccess").value;
+
+    const data = {
+      id,
+      network: $("packageNetwork").value,
+      accessType,
+      name: $("packageName").value.trim(),
+      description: $("packageDescription").value.trim(),
+
+      // PAID PACKAGE DETAILS
+      dataAmount: accessType === "PAID"
+        ? $("packageDataAmount").value.trim()
+        : "",
+
+      price: accessType === "PAID"
+        ? Number($("packagePrice").value)
+        : ""
+    };
+
+    const button = $("packageSave");
+    button.disabled = true;
+
+    try {
+      if (id) {
+        const existing = adminData.packages.find(p => p.id === id);
+        data.active = existing ? existing.active : true;
+
+        await callServer("updatePackage", adminToken, data);
+        showToast("Package updated successfully.");
+      } else {
+        await callServer("addPackage", adminToken, data);
+        showToast("New package added successfully.");
+      }
+
+      resetPackageForm();
+      await loadData();
+
+    } catch (error) {
+      showToast(error.message, true);
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  function renderPackages() {
+    if (!adminData.packages.length) {
+      $("packageTable").innerHTML =
+        '<div class="empty">No packages found.</div>';
+      return;
+    }
+
+    $("packageTable").innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>NETWORK</th>
+            <th>TYPE</th>
+            <th>NAME</th>
+            <th>DATA AMOUNT</th>
+            <th>PRICE (LKR)</th>
+            <th>STATUS</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${adminData.packages.map(p => `
+            <tr>
+              <td>${escapeHtml(p.network)}</td>
+              <td>
+                <span class="pill">${escapeHtml(p.accessType)}</span>
+              </td>
+              <td>${escapeHtml(p.name)}</td>
+              <td>
+                ${p.accessType === "PAID"
+                  ? escapeHtml(p.dataAmount || "-")
+                  : "-"}
+              </td>
+              <td>
+                ${p.accessType === "PAID"
+                  ? "Rs. " + escapeHtml(p.price || "-")
+                  : "-"}
+              </td>
+              <td>
+                <span class="pill ${p.active ? "green" : ""}">
+                  ${p.active ? "ACTIVE" : "INACTIVE"}
+                </span>
+              </td>
+              <td>
+                <button class="btn btn-small"
+                  onclick="editPackage('${escapeHtml(p.id)}')">EDIT</button>
+                <button class="btn btn-danger btn-small"
+                  onclick="removePackage('${escapeHtml(p.id)}')">DELETE</button>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>`;
+  }
+
+  function editPackage(id) {
+    const p = adminData.packages.find(item => item.id === id);
+    if (!p) return;
+
+    $("packageId").value = p.id;
+    $("packageNetwork").value = p.network;
+    $("packageAccess").value = p.accessType;
+    $("packageName").value = p.name;
+    $("packageDescription").value = p.description || "";
+
+    // LOAD PAID DETAILS
+    $("packageDataAmount").value = p.dataAmount || "";
+    $("packagePrice").value = p.price || "";
+
+    togglePaidFields();
+
+    $("packageFormTitle").textContent = "EDIT PACKAGE";
+    $("packageSave").textContent = "SAVE CHANGES";
+
+    $("packageForm").scrollIntoView({ behavior: "smooth" });
+  }
+
+  async function removePackage(id) {
+    if (!confirm("Delete this package and all its configs?")) return;
+
+    try {
+      await callServer("deletePackage", adminToken, id);
+      showToast("Package deleted.");
+      resetPackageForm();
+      await loadData();
+    } catch (error) {
+      showToast(error.message, true);
+    }
+  }
+
+  function resetPackageForm() {
+    $("packageForm").reset();
+    $("packageId").value = "";
+
+    $("packageFormTitle").textContent = "ADD NEW PACKAGE";
+    $("packageSave").textContent = "ADD PACKAGE";
+
+    $("packageDataAmount").value = "";
+    $("packagePrice").value = "";
+
+    togglePaidFields();
+  }
+
+  // CONFIG MANAGEMENT
+  function updatePackageDropdown() {
+    const select = $("configPackage");
+    const currentValue = select.value;
+
+    select.innerHTML =
+      '<option value="">Select a package</option>';
+
+    adminData.packages.forEach(p => {
+      const option = document.createElement("option");
+      option.value = p.id;
+      option.textContent =
+        p.network + " / " + p.accessType + " / " + p.name;
+      select.appendChild(option);
+    });
+
+    if (adminData.packages.some(p => p.id === currentValue)) {
+      select.value = currentValue;
+    }
+  }
+
+  $("configForm").addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const id = $("configId").value;
+
+    const data = {
+      id,
+      packageId: $("configPackage").value,
+      type: $("configType").value,
+      name: $("configName").value.trim(),
+      content: $("configContent").value
+    };
+
+    const button = $("configSave");
+    button.disabled = true;
+
+    try {
+      if (id) {
+        const existing = adminData.configs.find(c => c.id === id);
+        data.active = existing ? existing.active : true;
+
+        await callServer("updateConfig", adminToken, data);
+        showToast("Configuration updated.");
+      } else {
+        await callServer("addConfig", adminToken, data);
+        showToast("Configuration added.");
+      }
+
+      resetConfigForm();
+      await loadData();
+
+    } catch (error) {
+      showToast(error.message, true);
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  function renderConfigs() {
+    if (!adminData.configs.length) {
+      $("configTable").innerHTML =
+        '<div class="empty">No configurations found.</div>';
+      return;
+    }
+
+    $("configTable").innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>PACKAGE</th>
+            <th>TYPE</th>
+            <th>NAME</th>
+            <th>STATUS</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${adminData.configs.map(c => {
+            const p = adminData.packages.find(
+              item => item.id === c.packageId
+            );
+
+            return `
+              <tr>
+                <td>${escapeHtml(p ? p.name : "Unknown package")}</td>
+                <td>
+                  <span class="pill">${escapeHtml(c.type)}</span>
+                </td>
+                <td>${escapeHtml(c.name)}</td>
+                <td>
+                  <span class="pill ${c.active ? "green" : ""}">
+                    ${c.active ? "ACTIVE" : "INACTIVE"}
+                  </span>
+                </td>
+                <td>
+                  <button class="btn btn-small"
+                    onclick="editConfig('${escapeHtml(c.id)}')">EDIT</button>
+                  <button class="btn btn-danger btn-small"
+                    onclick="removeConfig('${escapeHtml(c.id)}')">DELETE</button>
+                </td>
+              </tr>`;
+          }).join("")}
+        </tbody>
+      </table>`;
+  }
+
+  function editConfig(id) {
+    const c = adminData.configs.find(item => item.id === id);
+    if (!c) return;
+
+    $("configId").value = c.id;
+    $("configPackage").value = c.packageId;
+    $("configType").value = c.type;
+    $("configName").value = c.name;
+    $("configContent").value = c.content;
+
+    $("configFormTitle").textContent = "EDIT CONFIGURATION";
+    $("configSave").textContent = "SAVE CHANGES";
+
+    $("configForm").scrollIntoView({ behavior: "smooth" });
+  }
+
+  async function removeConfig(id) {
+    if (!confirm("Delete this configuration?")) return;
+
+    try {
+      await callServer("deleteConfig", adminToken, id);
+      showToast("Configuration deleted.");
+      resetConfigForm();
+      await loadData();
+    } catch (error) {
+      showToast(error.message, true);
+    }
+  }
+
+  function resetConfigForm() {
+    $("configForm").reset();
+    $("configId").value = "";
+
+    $("configFormTitle").textContent = "ADD NEW CONFIGURATION";
+    $("configSave").textContent = "ADD CONFIG";
+  }
+
+  // LOGOUT
+  async function logout() {
+    try {
+      await callServer("adminLogout", adminToken);
+    } catch (error) {
+      console.error(error);
+    }
+
+    adminToken = "";
+    adminData = { packages: [], configs: [] };
+
+    $("dashboard").classList.add("hidden");
+    $("loginScreen").classList.remove("hidden");
+    $("loginForm").reset();
+    $("loginMessage").textContent = "";
+  }
+</script>
+
+</body>
+</html>

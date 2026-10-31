@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VOID X VPN™</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{--red:#ff102f;--red2:#ff365c;--dark:#080204}
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#080204;color:white;font-family:'Rajdhani',sans-serif;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;z-index:-2;background:radial-gradient(ellipse at 75% 50%,#450713,transparent 45%),radial-gradient(ellipse at 10% 90%,#27040d,transparent 40%),#080204}
+#particles{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}
+nav{height:82px;padding:0 8%;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ff102f30;background:#080204b8;backdrop-filter:blur(15px);position:relative;z-index:5}
+.logo{font-family:'Orbitron';font-size:21px;font-weight:900;color:white;text-decoration:none;letter-spacing:2px;text-shadow:0 0 12px var(--red),0 0 30px var(--red)}
+.logo span{color:var(--red)}
+.navlinks{display:flex;gap:32px}
+.navlinks a{color:#c7aeb3;text-decoration:none;font-size:16px;font-weight:700}
+.navlinks a:hover{color:var(--red2)}
+.navbtn{color:var(--red2);text-decoration:none;border:1px solid var(--red);padding:10px 20px;border-radius:5px;font-weight:700}
+.hero{min-height:calc(100vh - 82px);padding:45px 7%;display:flex;align-items:center}
+.content{max-width:1300px;width:100%;margin:auto;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:20px}
+.left{z-index:2;animation:enterLeft 1s ease both}
+.tag{display:inline-flex;align-items:center;gap:10px;color:var(--red2);border:1px solid #ff102f66;padding:10px 17px;border-radius:30px;background:#ff102f0d;font-family:'Orbitron';font-size:10px;letter-spacing:2px;margin-bottom:27px}
+.dot{height:7px;width:7px;background:var(--red);border-radius:50%;box-shadow:0 0 12px var(--red);animation:blink 1s infinite}
+h1{font-family:'Orbitron';font-size:clamp(35px,5.2vw,68px);font-weight:900;line-height:1.2;letter-spacing:-2px}
+.white{color:#fff}
+.glow{display:block;color:var(--red);text-shadow:0 0 8px var(--red),0 0 25px #ff002f,0 0 55px #ff002f;animation:glowPulse 2s ease-in-out infinite alternate}
+.description{color:#c3aeb3;max-width:490px;font-size:19px;line-height:1.7;margin-top:23px}
+.buttons{display:flex;flex-wrap:wrap;gap:15px;margin-top:33px}
+.btn{position:relative;display:inline-flex;justify-content:center;align-items:center;min-width:175px;padding:15px 22px;text-decoration:none;font-family:'Orbitron';font-size:10px;font-weight:800;letter-spacing:1px;border-radius:5px;overflow:hidden;transition:.35s;cursor:pointer}
+.primary{color:white;background:linear-gradient(100deg,#ff102f,#a90024);box-shadow:0 0 20px #ff102f55;border:1px solid #ff365c}
+.secondary{color:white;border:1px solid var(--red);background:#ff102f0c}
+.btn:hover{transform:translateY(-6px) scale(1.04);box-shadow:0 0 25px var(--red),0 0 55px #ff102f88}
+.btn:before{content:"";position:absolute;top:-100%;left:-80%;width:35%;height:300%;background:#ffffff70;transform:rotate(25deg);transition:left .6s}
+.btn:hover:before{left:150%}
+.btn span{position:relative;z-index:2}
+.stats{display:flex;gap:35px;margin-top:45px}
+.stat strong{display:block;font-family:'Orbitron';font-size:18px;color:var(--red2)}
+.stat span{display:block;color:#a68a91;font-size:12px;letter-spacing:1px;margin-top:5px}
+.portal{height:540px;position:relative;display:flex;justify-content:center;align-items:center;animation:portalEnter 1.4s ease both}
+#portalCanvas{width:100%;height:100%;display:block}
+.float{position:absolute;z-index:2;padding:13px 16px;background:#1b070bd9;border:1px solid #ff102f66;border-radius:9px;backdrop-filter:blur(12px);box-shadow:0 0 25px #ff002f22;animation:floating 4s ease-in-out infinite;pointer-events:none}
+.float strong{display:block;color:var(--red2);font-family:'Orbitron';font-size:10px}
+.float span{font-size:12px;color:#c3aeb3}
+.float.one{top:13%;right:0}
+.float.two{bottom:16%;left:0;animation-delay:-2s}
+.portal-label{position:absolute;bottom:5px;color:#ff365c99;font-family:'Orbitron';font-size:9px;letter-spacing:4px}
+
+/* PAGES */
+.app-page{min-height:100vh;padding:90px 7%;display:none;flex-direction:column;align-items:center;justify-content:center;position:relative;background:radial-gradient(ellipse at center,#350711,transparent 65%),#080204;border-top:1px solid #ff102f44}
+.app-page h2{font-family:'Orbitron';color:white;font-size:clamp(25px,5vw,48px);text-align:center;text-shadow:0 0 15px #ff102f,0 0 35px #ff102f;animation:glowPulse 2s infinite alternate}
+.subtitle{color:#ff6680;font-size:14px;letter-spacing:4px;text-align:center;margin:18px 0 45px}
+.page-back{margin-top:35px;padding:12px 25px;border:1px solid var(--red);border-radius:5px;background:#ff102f0c;color:white;font-family:'Orbitron';cursor:pointer;transition:.3s}
+.page-back:hover{background:var(--red);box-shadow:0 0 20px var(--red)}
+.config-buttons,.option-buttons{display:flex;justify-content:center;gap:25px;flex-wrap:wrap;width:100%;max-width:760px}
+.config-btn{flex:1;min-height:110px;padding:30px 12px;border:1px solid var(--red);border-radius:12px;background:linear-gradient(145deg,#310710,#100307);color:white;font-family:'Orbitron';font-size:clamp(12px,2vw,19px);font-weight:800;cursor:pointer;box-shadow:0 0 18px #ff102f33;transition:.3s;position:relative;overflow:hidden}
+.config-btn:before{content:"";position:absolute;inset:-100%;z-index:0;background:conic-gradient(transparent 285deg,#ff102f 305deg,#fff 315deg,#ff365c 325deg,transparent 345deg);animation:spin 2.2s linear infinite}
+.config-btn:after{content:"";position:absolute;inset:2px;border-radius:10px;background:linear-gradient(145deg,#310710,#100307);z-index:0}
+.config-btn span{position:relative;z-index:2}
+.config-btn:hover{box-shadow:0 0 30px var(--red);transform:translateY(-5px)}
+.network-buttons{display:grid;grid-template-columns:repeat(2,1fr);gap:25px;width:100%;max-width:760px}
+.network-btn{min-height:110px;border:1px solid var(--red);border-radius:12px;background:linear-gradient(145deg,#310710,#100307);color:white;font-family:'Orbitron';font-size:clamp(13px,2vw,20px);font-weight:800;letter-spacing:2px;cursor:pointer;box-shadow:0 0 18px #ff102f33;transition:.4s;position:relative;overflow:hidden}
+.network-btn:before{content:"";position:absolute;inset:-100%;z-index:0;background:conic-gradient(transparent 285deg,#ff102f 305deg,#fff 315deg,#ff365c 325deg,transparent 345deg);animation:spin 2.2s linear infinite}
+.network-btn:after{content:"";position:absolute;inset:2px;border-radius:10px;background:linear-gradient(145deg,#310710,#100307);z-index:0}
+.network-btn span{position:relative;z-index:2;text-shadow:0 0 12px var(--red)}
+.network-btn:hover{transform:translateY(-8px) scale(1.03);box-shadow:0 0 30px var(--red)}
+.option-btn{min-width:210px;min-height:90px;font-size:15px}
+
+/* PACKAGE CARDS */
+.data-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;width:100%;max-width:1000px}
+.data-card{background:linear-gradient(145deg,#280711ee,#100307);border:1px solid #ff365c77;border-radius:12px;padding:24px;box-shadow:0 0 20px #ff102f22;transition:.3s}
+.data-card:hover{transform:translateY(-6px);box-shadow:0 0 25px #ff102f66}
+.data-card h3{font-family:'Orbitron';color:#ff6680;font-size:16px;margin-bottom:10px}
+.data-card p{color:#c3aeb3;font-size:15px;line-height:1.5;margin-bottom:15px}
+.data-card .btn{min-width:100%;padding:12px;font-size:10px}
+.config-list{width:100%;max-width:850px}
+.config-card{border:1px solid #ff365c77;background:linear-gradient(145deg,#250710dd,#100307ee);border-radius:10px;padding:20px;margin-bottom:15px;box-shadow:0 0 18px #ff102f22}
+.config-card h3{font-family:'Orbitron';color:#ff6680;font-size:15px;margin-bottom:12px}
+.config-card pre{white-space:pre-wrap;overflow-wrap:anywhere;color:#eee;background:#080204;border:1px solid #ff102f44;padding:15px;border-radius:6px;font-family:monospace;font-size:13px;line-height:1.6}
+.copy-btn{margin-top:12px;padding:9px 17px;border:1px solid var(--red);border-radius:5px;color:white;background:#ff102f22;cursor:pointer;font-family:'Orbitron';font-size:10px}
+.empty-message{text-align:center;padding:30px 15px;color:#c3aeb3;border:1px dashed #ff365c77;border-radius:10px;background:#ff102f09;font-size:17px;width:100%}
+.loading{color:#ff6680;text-align:center;padding:25px}
+
+/* PAID PACKAGE DETAILS */
+.package-details-card{width:100%;max-width:560px;padding:35px 28px;border:1px solid #ff365c99;border-radius:14px;background:linear-gradient(145deg,#280711ee,#100307);box-shadow:0 0 30px #ff102f33;text-align:center}
+.package-details-card h3{font-family:'Orbitron';font-size:clamp(20px,4vw,28px);color:#ff6680;margin-bottom:15px}
+.package-details-card .detail-description{color:#c3aeb3;font-size:17px;margin-bottom:25px;line-height:1.5}
+.package-detail-row{display:flex;justify-content:space-between;gap:15px;padding:16px 8px;border-bottom:1px solid #ff365c33;font-size:18px}
+.package-detail-row span:first-child{color:#c3aeb3}
+.package-detail-row strong{color:white;text-align:right}
+.package-price{font-family:'Orbitron';font-size:clamp(23px,5vw,32px);color:#ff365c!important;text-shadow:0 0 15px #ff102f88}
+.buy-now-btn{width:100%;margin-top:28px;min-height:55px;font-size:13px}
+.details-note{color:#a68a91;font-size:13px;margin-top:16px}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes blink{50%{opacity:.25}}
+@keyframes glowPulse{from{filter:brightness(.75)}to{filter:brightness(1.5)}}
+@keyframes floating{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-15px) rotate(2deg)}}
+@keyframes enterLeft{from{opacity:0;transform:translateX(-45px)}to{opacity:1;transform:translateX(0)}}
+@keyframes portalEnter{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+
+@media(max-width:850px){
+nav{height:70px;padding:0 5%}.logo{font-size:16px}.navlinks{display:none}
+.hero{padding:45px 6%}.content{grid-template-columns:1fr;text-align:center}
+.left{display:flex;flex-direction:column;align-items:center}
+.portal{height:360px}.float.one{top:5%}.float.two{bottom:10%}
+}
+@media(max-width:480px){
+.config-buttons,.option-buttons{gap:12px}
+.config-btn{padding:23px 7px;font-size:11px}
+.network-buttons{gap:12px}.network-btn{min-height:85px;font-size:12px}
+.portal{height:300px}.stats{gap:15px}.stat strong{font-size:14px}
+.btn{min-width:140px;font-size:9px}
+.package-details-card{padding:25px 17px}
+.package-detail-row{font-size:16px}
+}
+
+/* Performance: reduce motion when requested by device */
+@media(prefers-reduced-motion:reduce){
+*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}
+}
+
+/* VOID X VPN - DARK PREMIUM BUTTON THEME */
+/* Only the two Home Page buttons are changed */
+
+#homePage .buttons .btn.primary,
+#homePage .buttons .btn.secondary {
+    color: #ffffff !important;
+
+    background: linear-gradient(
+        110deg,
+        #4a1020 0%,
+        #35101b 50%,
+        #260912 100%
+    ) !important;
+
+    border: 1px solid #8f304d !important;
+    border-radius: 7px !important;
+
+    box-shadow:
+        0 0 12px #8f304d35,
+        inset 0 0 10px #ff365c08 !important;
+}
+
+#homePage .buttons .btn.primary:hover,
+#homePage .buttons .btn.secondary:hover {
+    box-shadow:
+        0 0 18px #a83255,
+        0 0 30px #8f304d55 !important;
+}
+</style>
+</head>
+
+<body>
+<canvas id="particles"></canvas>
+
+<nav id="mainNav">
+<a href="#" class="logo" onclick="backHome();return false">VOID <span>X</span> VPN™</a>
+<div class="navlinks">
+<a href="#" onclick="backHome();return false">HOME</a>
+<a href="#" onclick="showPage('packages');return false">PACKAGES</a>
+</div>
+<a href="#" class="navbtn" onclick="showPage('packages');return false">GET STARTED ↗</a>
+</nav>
+
+<!-- HOME -->
+<main class="hero" id="homePage">
+<div class="content">
+<section class="left">
+<div class="tag"><span class="dot"></span>NEXT GENERATION VPN NETWORK</div>
+<h1><span class="white">ENTER THE</span><span class="glow">DARK</span><span class="glow">NETWORK.</span></h1>
+<p class="description">Step into a new digital dimension. Experience a modern VPN network with advanced connectivity and digital freedom.</p>
+<div class="buttons">
+<a href="#" class="btn primary" onclick="showPage('packages');return false"><span>EXPLORE PACKAGES ↗</span></a>
+<a href="#" class="btn secondary" onclick="showPage('packages');return false"><span>DISCOVER MORE</span></a>
+</div>
+<div class="stats">
+<div class="stat"><strong>SECURE</strong><span>CONNECTION</span></div>
+<div class="stat"><strong>GLOBAL</strong><span>NETWORK</span></div>
+<div class="stat"><strong>24/7</strong><span>ACCESS</span></div>
+</div>
+</section>
+
+<section class="portal">
+<div class="float one"><strong>✦ SYSTEM ACTIVE</strong><span>Digital gateway online</span></div>
+<canvas id="portalCanvas"></canvas>
+<div class="float two"><strong>◈ VOID NETWORK</strong><span>Entering digital space...</span></div>
+<div class="portal-label">RED ENERGY CORE</div>
+</section>
+</div>
+</main>
+
+<!-- PAGE 2 -->
+<section id="packages" class="app-page">
+<div class="tag"><span class="dot"></span>VOID X CONFIG CENTER</div>
+<h2>CHOOSE YOUR CONFIG</h2>
+<p class="subtitle">SELECT YOUR DIGITAL ACCESS</p>
+<div class="config-buttons">
+<button class="config-btn" onclick="selectAccess('PAID')"><span>🔴 PAID CONFIG</span></button>
+<button class="config-btn" onclick="selectAccess('FREE')"><span>⚡ FREE CONFIG</span></button>
+</div>
+<button class="page-back" onclick="backHome()">← BACK TO HOME</button>
+</section>
+
+<!-- PAGE 3 -->
+<section id="networks" class="app-page">
+<div class="tag"><span class="dot"></span>VOID X NETWORK CENTER</div>
+<h2>SELECT YOUR NETWORK</h2>
+<p class="subtitle">CHOOSE YOUR MOBILE NETWORK</p>
+<div class="network-buttons">
+<button class="network-btn" onclick="selectNetwork('DIALOG')"><span>DIALOG</span></button>
+<button class="network-btn" onclick="selectNetwork('MOBITEL')"><span>MOBITEL</span></button>
+<button class="network-btn" onclick="selectNetwork('HUTCH')"><span>HUTCH</span></button>
+<button class="network-btn" onclick="selectNetwork('AIRTEL')"><span>AIRTEL</span></button>
+</div>
+<button class="page-back" onclick="showPage('packages')">← BACK</button>
+</section>
+
+<!-- PAGE 4 -->
+<section id="networkPackages" class="app-page">
+<div class="tag"><span class="dot"></span>VOID X PACKAGE CENTER</div>
+<h2 id="networkPackageTitle">DIALOG PACKAGES</h2>
+<p class="subtitle" id="networkPackageSubtitle">SELECT YOUR PACKAGE</p>
+<div class="data-grid" id="packageCards"><div class="loading">Loading packages...</div></div>
+<button class="page-back" onclick="showPage('networks')">← BACK TO NETWORKS</button>
+</section>
+
+<!-- PAGE 5: FREE CONFIG OPTIONS -->
+<section id="packageOptions" class="app-page">
+<div class="tag"><span class="dot"></span>VOID X CONFIG ACCESS</div>
+<h2 id="packageOptionTitle">PACKAGE</h2>
+<p class="subtitle">SELECT CONFIG FORMAT</p>
+<div class="option-buttons">
+<button class="btn primary option-btn" onclick="openConfigType('CODE')"><span>CODE ↗</span></button>
+<button class="btn primary option-btn" onclick="openConfigType('EHI')"><span>EHI ↗</span></button>
+</div>
+<button class="page-back" onclick="showPage('networkPackages')">← BACK TO PACKAGES</button>
+</section>
+
+<!-- PAGE 6: CONFIG LIST -->
+<section id="configList" class="app-page">
+<div class="tag"><span class="dot"></span>VOID X CONFIG LIBRARY</div>
+<h2 id="configPageTitle">CONFIG LIST</h2>
+<p class="subtitle">AVAILABLE CONFIGURATIONS</p>
+<div class="config-list" id="configItems"></div>
+<button class="page-back" onclick="showPage('packageOptions')">← BACK</button>
+</section>
+
+<!-- PAID PACKAGE DETAILS -->
+<section id="packageDetails" class="app-page">
+<div class="tag"><span class="dot"></span>VOID X PACKAGE DETAILS</div>
+<h2>PACKAGE DETAILS</h2>
+<p class="subtitle">REVIEW YOUR SELECTED PACKAGE</p>
+
+<div class="package-details-card">
+<h3 id="detailPackageName">PACKAGE NAME</h3>
+<p class="detail-description" id="detailPackageDescription"></p>
+
+<div class="package-detail-row">
+<span>Network</span>
+<strong id="detailNetwork">-</strong>
+</div>
+
+<div class="package-detail-row">
+<span>Package</span>
+<strong id="detailPackageType">-</strong>
+</div>
+
+<div class="package-detail-row">
+<span>Data Amount</span>
+<strong id="detailDataAmount">-</strong>
+</div>
+
+<div class="package-detail-row">
+<span>Price</span>
+<strong class="package-price" id="detailPrice">-</strong>
+</div>
+
+<button class="btn primary buy-now-btn" onclick="buyPaidPackage()">
+<span>BUY NOW ↗</span>
+</button>
+
+<p class="details-note">After placing your order, our team will contact you on WhatsApp.</p>
+</div>
+
+<button class="page-back" onclick="showPage('networkPackages')">← BACK TO PACKAGES</button>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<!-- Connects this site to the Google Apps Script backend (replaces google.script.run) -->
+<script src="api.js"></script>
+
+<script>
+"use strict";
+
+/* NAVIGATION */
+const pageIds=[
+"packages",
+"networks",
+"networkPackages",
+"packageOptions",
+"configList",
+"packageDetails"
+];
+
+let selectedAccess="FREE";
+let selectedNetwork="";
+let selectedPackage=null;
+let selectedType="";
+let publicData={packages:[],configs:[]};
+
+function showPage(id){
+document.getElementById("mainNav").style.display="none";
+document.getElementById("homePage").style.display="none";
+
+pageIds.forEach(p=>{
+document.getElementById(p).style.display="none";
+});
+
+if(id==="home"){
+document.getElementById("mainNav").style.display="flex";
+document.getElementById("homePage").style.display="flex";
+}else{
+document.getElementById(id).style.display="flex";
+}
+
+window.scrollTo({top:0,behavior:"auto"});
+}
+
+function backHome(){
+showPage("home");
+}
+
+function selectAccess(type){
+selectedAccess=type;
+showPage("networks");
+}
+
+function selectNetwork(network){
+selectedNetwork=network;
+
+document.getElementById("networkPackageTitle").textContent=network+" PACKAGES";
+document.getElementById("networkPackageSubtitle").textContent=selectedAccess+" CONFIG PACKAGES";
+
+renderPackages();
+showPage("networkPackages");
+}
+
+/* PACKAGE LIST */
+function renderPackages(){
+const box=document.getElementById("packageCards");
+box.innerHTML="";
+
+const list=publicData.packages.filter(p=>
+String(p.network).toUpperCase()===selectedNetwork &&
+String(p.accessType).toUpperCase()===selectedAccess
+);
+
+if(!list.length){
+box.innerHTML='<div class="empty-message">NO PACKAGES AVAILABLE<br><br>New '+selectedNetwork+' packages will be added soon.</div>';
+return;
+}
+
+list.forEach(pkg=>{
+const card=document.createElement("div");
+card.className="data-card";
+
+const title=document.createElement("h3");
+title.textContent=pkg.name;
+
+const desc=document.createElement("p");
+desc.textContent=pkg.description||"Select this package to view available configurations.";
+
+const button=document.createElement("button");
+button.className="btn primary";
+button.innerHTML="<span>SELECT PACKAGE ↗</span>";
+
+button.onclick=()=>{
+selectedPackage=pkg;
+
+if(selectedAccess==="PAID"){
+showPackageDetails();
+}else{
+document.getElementById("packageOptionTitle").textContent=pkg.name;
+showPage("packageOptions");
+}
+};
+
+card.append(title,desc,button);
+box.appendChild(card);
+});
+}
+
+/* PAID PACKAGE DETAILS */
+function showPackageDetails(){
+if(!selectedPackage){
+alert("Please select a package first.");
+return;
+}
+
+const pkg=selectedPackage;
+
+document.getElementById("detailPackageName").textContent=pkg.name||"VPN Package";
+document.getElementById("detailPackageDescription").textContent=pkg.description||"VOID X VPN Package";
+
+document.getElementById("detailNetwork").textContent=selectedNetwork;
+document.getElementById("detailPackageType").textContent=pkg.name||"-";
+
+const dataAmount=pkg.dataAmount||pkg.gbAmount||"Not specified";
+document.getElementById("detailDataAmount").textContent=dataAmount;
+
+const price=Number(pkg.price);
+document.getElementById("detailPrice").textContent=
+Number.isFinite(price)&&pkg.price!==""&&pkg.price!==null
+? "LKR "+price.toLocaleString("en-US")
+: "Price unavailable";
+
+showPage("packageDetails");
+}
+
+/* WHATSAPP ORDER */
+function buyPaidPackage(){
+if(!selectedPackage){
+alert("Please select a package first.");
+return;
+}
+
+const pkg=selectedPackage;
+const dataAmount=pkg.dataAmount||pkg.gbAmount||"Not specified";
+
+const price=Number(pkg.price);
+const priceText=
+Number.isFinite(price)&&pkg.price!==""&&pkg.price!==null
+? "LKR "+price.toLocaleString("en-US")
+: "Price unavailable";
+
+const message=
+`⚡ VOID X VPN™ – NEW ORDER
+
+Hello! I want to purchase this VPN package.
+
+━━━━━━━━━━━━━
+Network: ${selectedNetwork}
+Package: ${pkg.name||"VPN Package"}
+Data: ${dataAmount}
+Price: ${priceText}
+━━━━━━━━━━━━━
+
+Please send me the payment details.
+Thank you! ❤️`;
+
+const whatsappURL=
+"https://wa.me/94704410147?text="+encodeURIComponent(message);
+
+window.open(whatsappURL,"_blank","noopener");
+}
+
+/* FREE CONFIG FLOW */
+function openConfigType(type){
+if(!selectedPackage){
+alert("Please select a package first.");
+return;
+}
+
+selectedType=type;
+
+document.getElementById("configPageTitle").textContent=
+selectedNetwork+" | "+selectedPackage.name+" | "+type;
+
+renderConfigs();
+showPage("configList");
+}
+
+function renderConfigs(){
+const box=document.getElementById("configItems");
+box.innerHTML="";
+
+if(!selectedPackage){
+box.innerHTML='<div class="empty-message">PLEASE SELECT A PACKAGE FIRST</div>';
+return;
+}
+
+const list=publicData.configs.filter(c=>
+String(c.packageId)===String(selectedPackage.id) &&
+String(c.type).toUpperCase()===selectedType
+);
+
+if(!list.length){
+box.innerHTML='<div class="empty-message">NO '+selectedType+' CONFIGS AVAILABLE<br><br>New configurations will be added soon.</div>';
+return;
+}
+
+list.forEach(item=>{
+const card=document.createElement("div");
+card.className="config-card";
+
+const title=document.createElement("h3");
+title.textContent=item.name;
+
+const content=document.createElement("pre");
+content.textContent=item.content;
+
+const copy=document.createElement("button");
+copy.className="copy-btn";
+copy.textContent="COPY CONFIG";
+
+copy.onclick=async()=>{
+try{
+await navigator.clipboard.writeText(item.content);
+copy.textContent="COPIED ✓";
+setTimeout(()=>copy.textContent="COPY CONFIG",1500);
+}catch(e){
+alert("Copy failed. Please copy manually.");
+}
+};
+
+card.append(title,content,copy);
+box.appendChild(card);
+});
+}
+
+/* GOOGLE APPS SCRIPT CONNECTION */
+function serverCall(method,...args){
+return new Promise((resolve,reject)=>{
+if(!window.google||!google.script||!google.script.run){
+reject(new Error("Backend connection (api.js) is missing."));
+return;
+}
+
+google.script.run
+.withSuccessHandler(resolve)
+.withFailureHandler(err=>reject(new Error(err.message||String(err))))
+[method](...args);
+});
+}
+
+/* PUBLIC DATA */
+async function loadPublicData(){
+try{
+const result=await serverCall("getPublicData");
+
+publicData={
+packages:Array.isArray(result?.packages)?result.packages:[],
+configs:Array.isArray(result?.configs)?result.configs:[]
+};
+
+if(document.getElementById("networkPackages").style.display==="flex"){
+renderPackages();
+}
+
+if(document.getElementById("configList").style.display==="flex"){
+renderConfigs();
+}
+
+}catch(error){
+console.error("Public data error:",error);
+publicData={packages:[],configs:[]};
+}
+}
+
+/* OPTIMIZED BACKGROUND PARTICLES */
+const bg=document.getElementById("particles");
+const ctx=bg.getContext("2d",{alpha:true});
+
+let points=[];
+let mouse={x:-1000,y:-1000};
+let bgWidth=0;
+let bgHeight=0;
+let bgFrame=0;
+let lastBGFrame=0;
+const BG_FPS=30;
+const BG_INTERVAL=1000/BG_FPS;
+
+function resizeBG(){
+const dpr=Math.min(window.devicePixelRatio||1,1.5);
+
+bgWidth=window.innerWidth;
+bgHeight=window.innerHeight;
+
+bg.width=Math.round(bgWidth*dpr);
+bg.height=Math.round(bgHeight*dpr);
+
+bg.style.width=bgWidth+"px";
+bg.style.height=bgHeight+"px";
+
+ctx.setTransform(dpr,0,0,dpr,0,0);
+
+points=[];
+
+const amount=Math.min(45,Math.floor(bgWidth/18));
+
+for(let i=0;i<amount;i++){
+points.push({
+x:Math.random()*bgWidth,
+y:Math.random()*bgHeight,
+size:Math.random()*1.5+.5,
+speed:Math.random()*.4+.15
+});
+}
+}
+
+resizeBG();
+window.addEventListener("resize",resizeBG,{passive:true});
+
+window.addEventListener("pointermove",e=>{
+mouse.x=e.clientX;
+mouse.y=e.clientY;
+},{passive:true});
+
+function drawBG(timestamp){
+bgFrame=requestAnimationFrame(drawBG);
+
+if(document.hidden)return;
+if(timestamp-lastBGFrame<BG_INTERVAL)return;
+
+lastBGFrame=timestamp;
+
+ctx.clearRect(0,0,bgWidth,bgHeight);
+ctx.fillStyle="rgba(255,20,55,.75)";
+
+points.forEach(p=>{
+p.y-=p.speed;
+
+if(p.y<0){
+p.y=bgHeight;
+p.x=Math.random()*bgWidth;
+}
+
+const dx=mouse.x-p.x;
+const dy=mouse.y-p.y;
+const d=dx*dx+dy*dy;
+
+if(d<10000&&d>0){
+const distance=Math.sqrt(d);
+p.x-=dx/distance*.7;
+p.y-=dy/distance*.7;
+}
+
+ctx.beginPath();
+ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+ctx.fill();
+});
+}
+
+bgFrame=requestAnimationFrame(drawBG);
+
+/* OPTIMIZED 3D PORTAL */
+const canvas=document.getElementById("portalCanvas");
+
+if(window.THREE){
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(45,1,.1,100);
+camera.position.z=8;
+
+const renderer=new THREE.WebGLRenderer({
+canvas,
+alpha:true,
+antialias:false,
+powerPreference:"low-power"
+});
+
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.25));
+
+const portal=new THREE.Group();
+scene.add(portal);
+
+const rings=[];
+const colors=[0xff102f,0xff365c,0xb90029,0xff002f];
+
+for(let i=0;i<5;i++){
+const ring=new THREE.Mesh(
+new THREE.TorusGeometry(1.5+i*.15,.025,8,80),
+new THREE.MeshBasicMaterial({
+color:colors[i%4],
+transparent:true,
+opacity:.9
+})
+);
+
+ring.rotation.x=Math.PI/2.4+i*.18;
+ring.rotation.y=i*.4;
+portal.add(ring);
+rings.push(ring);
+}
+
+const core=new THREE.Mesh(
+new THREE.SphereGeometry(1.1,32,32),
+new THREE.MeshBasicMaterial({
+color:0x5b061a,
+wireframe:true,
+transparent:true,
+opacity:.7
+})
+);
+
+portal.add(core);
+
+const inner=new THREE.Mesh(
+new THREE.SphereGeometry(.65,24,24),
+new THREE.MeshBasicMaterial({
+color:0xff102f,
+transparent:true,
+opacity:.2
+})
+);
+
+portal.add(inner);
+
+/* Reduced particle count: 1000 -> 350 */
+const count=350;
+const positions=new Float32Array(count*3);
+
+for(let i=0;i<count;i++){
+const a=Math.random()*Math.PI*2;
+const r=Math.random()*2.5+.4;
+
+positions[i*3]=Math.cos(a)*r;
+positions[i*3+1]=Math.sin(a)*r;
+positions[i*3+2]=(Math.random()-.5)*3;
+}
+
+const geo=new THREE.BufferGeometry();
+geo.setAttribute("position",new THREE.BufferAttribute(positions,3));
+
+const particleMaterial=new THREE.PointsMaterial({
+color:0xff2045,
+size:.025,
+transparent:true,
+opacity:.9,
+blending:THREE.AdditiveBlending
+});
+
+portal.add(new THREE.Points(geo,particleMaterial));
+
+let targetX=0;
+let targetY=0;
+let base=0;
+let time=0;
+let portalFrame=0;
+let lastPortalFrame=0;
+
+const PORTAL_FPS=30;
+const PORTAL_INTERVAL=1000/PORTAL_FPS;
+
+canvas.addEventListener("pointermove",e=>{
+const r=canvas.getBoundingClientRect();
+targetY=((e.clientX-r.left)/r.width-.5)*.8;
+targetX=((e.clientY-r.top)/r.height-.5)*.8;
+},{passive:true});
+
+canvas.addEventListener("pointerleave",()=>{
+targetX=0;
+targetY=0;
+});
+
+function resizePortal(){
+const w=canvas.clientWidth;
+const h=canvas.clientHeight;
+if(!w||!h)return;
+
+camera.aspect=w/h;
+camera.updateProjectionMatrix();
+renderer.setSize(w,h,false);
+}
+
+if(window.ResizeObserver){
+const observer=new ResizeObserver(resizePortal);
+observer.observe(canvas);
+}else{
+window.addEventListener("resize",resizePortal);
+}
+
+resizePortal();
+
+function animatePortal(timestamp){
+portalFrame=requestAnimationFrame(animatePortal);
+
+if(document.hidden)return;
+if(timestamp-lastPortalFrame<PORTAL_INTERVAL)return;
+
+lastPortalFrame=timestamp;
+
+time+=.033;
+base+=.01;
+
+portal.rotation.x+=(targetX-portal.rotation.x)*.035;
+portal.rotation.y+=(base+targetY-portal.rotation.y)*.035;
+
+rings.forEach((r,i)=>{
+r.rotation.z+=.01*(i%2===0?1:-1);
+});
+
+const pulse=1+Math.sin(time*2)*.05;
+core.scale.setScalar(pulse);
+inner.scale.setScalar(pulse*1.1);
+
+renderer.render(scene,camera);
+}
+
+portalFrame=requestAnimationFrame(animatePortal);
+
+/* Stop rendering when the portal is not visible */
+if("IntersectionObserver" in window){
+const portalObserver=new IntersectionObserver(entries=>{
+const visible=entries[0].isIntersecting;
+
+if(visible && !document.hidden){
+if(!portalFrame){
+lastPortalFrame=0;
+portalFrame=requestAnimationFrame(animatePortal);
+}
+}else{
+cancelAnimationFrame(portalFrame);
+portalFrame=0;
+}
+});
+
+portalObserver.observe(canvas);
+}
+
+}else{
+canvas.style.display="none";
+}
+
+/* PAUSE ANIMATIONS WHEN TAB IS HIDDEN */
+document.addEventListener("visibilitychange",()=>{
+if(document.hidden){
+cancelAnimationFrame(bgFrame);
+}else{
+lastBGFrame=0;
+bgFrame=requestAnimationFrame(drawBG);
+}
+});
+
+/* INITIAL LOAD */
+loadPublicData();
+</script>
+</body>
+</html>
