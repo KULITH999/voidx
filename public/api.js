@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbzPCHh7AL2Xw_t-PP2RdMFpOS3p0EAZKbTJzOxMa5JpcuJMf3aiwKMQvZeTcycuT8Mq/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwelp8J42J1OWV58gHDmhfbW7zcAszSWw5Hyrz9hm3hkZyhcErMUEGDGHjkRpoNNPtK/exec";
 
 function makeRunner(onSuccess, onFailure) {
   return new Proxy({}, {
