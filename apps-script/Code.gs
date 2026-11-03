@@ -1,15 +1,15 @@
-
 /*************************************************
- * VOID X VPN™ - COMPLETE GOOGLE APPS SCRIPT
- * Public Website: Index.html
- * Admin Dashboard: Admin.html
+ * VOID X VPN™ - GOOGLE APPS SCRIPT BACKEND (API)
+ * Public site: Vercel (public/index.html) | Admin: this script (?page=admin)
  * Database: Google Sheets
+ *
+ * Deploy as Web app:  Execute as: Me | Who has access: Anyone
+ * Admin credentials go in Project Settings > Script Properties:
+ *   ADMIN_USERNAME, ADMIN_PASSWORD
  *************************************************/
 
 const SHEET_PACKAGES = "Packages";
 const SHEET_CONFIGS = "Configs";
-const SHEET_EHI_FILES = "EhiFiles";
-const EHI_FOLDER_PROPERTY = "EHI_DRIVE_FOLDER_ID";
 const SESSION_PREFIX = "VOID_ADMIN_";
 const SESSION_SECONDS = 21600;
 
@@ -24,33 +24,47 @@ const CONFIG_HEADERS = [
   "content", "active", "createdAt"
 ];
 
-const EHI_HEADERS = [
-  "id", "packageId", "name", "fileId",
-  "fileName", "mimeType", "active", "createdAt"
-];
-
 /* ==============================================
-   1. WEBSITE ROUTING
+   1. API ROUTING (used by the Vercel website)
 ============================================== */
 
-function doGet(e) {
-  const page = e && e.parameter ? e.parameter.page : "";
+// Only these functions can be called from the website.
+const API_METHODS = {
+  getPublicData, adminLogin, adminLogout, getAdminData,
+  addPackage, updatePackage, deletePackage,
+  addConfig, updateConfig, deleteConfig
+};
 
-  if (page === "admin") {
+function doGet(e) {
+  // Admin dashboard is served by Apps Script itself: .../exec?page=admin
+  if (e && e.parameter && e.parameter.page === "admin") {
     return HtmlService.createHtmlOutputFromFile("Admin")
       .setTitle("VOID X VPN™ | Admin Dashboard")
-      .addMetaTag("viewport", "width=device-width, initial-scale=1")
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+      .addMetaTag("viewport", "width=device-width, initial-scale=1");
   }
 
-  return HtmlService.createHtmlOutputFromFile("Index")
-    .setTitle("VOID X VPN™ | KULITH")
-    .addMetaTag("viewport", "width=device-width, initial-scale=1")
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  return json_({ ok: true, service: "VOID X VPN API", status: "online" });
+}
+
+function doPost(e) {
+  try {
+    const body = JSON.parse(e.postData.contents);
+    const fn = API_METHODS[body.method];
+    if (!fn) throw new Error("Unknown method.");
+    return json_({ ok: true, result: fn.apply(null, body.args || []) });
+  } catch (err) {
+    return json_({ ok: false, error: err.message });
+  }
+}
+
+function json_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 /* ==============================================
    2. DATABASE SETUP + SAFE MIGRATION
+   (run setupDatabase once from the editor)
 ============================================== */
 
 function setupDatabase() {
@@ -73,7 +87,6 @@ function setupDatabase() {
 
   createSheet_(ss, SHEET_PACKAGES, PACKAGE_HEADERS);
   createSheet_(ss, SHEET_CONFIGS, CONFIG_HEADERS);
-  createSheet_(ss, SHEET_EHI_FILES, EHI_HEADERS);
 
   props.setProperty("SPREADSHEET_ID", ss.getId());
 
@@ -175,11 +188,24 @@ function updateObjectRow_(sheet, rowNumber, data) {
 }
 
 /* ==============================================
-   4. ADMIN LOGIN
+   4. ADMIN LOGIN (with basic brute-force protection)
 ============================================== */
+
+const MAX_FAILED_LOGINS = 5;
+const LOCKOUT_SECONDS = 900; // 15 minutes
 
 function adminLogin(username, password) {
   const props = PropertiesService.getScriptProperties();
+  const cache = CacheService.getScriptCache();
+
+  const failures = Number(cache.get("VOID_LOGIN_FAILS") || 0);
+
+  if (failures >= MAX_FAILED_LOGINS) {
+    return {
+      success: false,
+      message: "Too many failed attempts. Try again in 15 minutes."
+    };
+  }
 
   const savedUsername = props.getProperty("ADMIN_USERNAME");
   const savedPassword = props.getProperty("ADMIN_PASSWORD");
@@ -194,19 +220,19 @@ function adminLogin(username, password) {
     String(username) !== savedUsername ||
     String(password) !== savedPassword
   ) {
+    cache.put("VOID_LOGIN_FAILS", String(failures + 1), LOCKOUT_SECONDS);
+
     return {
       success: false,
       message: "Invalid username or password."
     };
   }
 
+  cache.remove("VOID_LOGIN_FAILS");
+
   const token = Utilities.getUuid() + Utilities.getUuid();
 
-  CacheService.getScriptCache().put(
-    SESSION_PREFIX + token,
-    "authorized",
-    SESSION_SECONDS
-  );
+  cache.put(SESSION_PREFIX + token, "authorized", SESSION_SECONDS);
 
   return {
     success: true,
@@ -282,23 +308,9 @@ function getPublicData() {
       content: String(row.content || "")
     }));
 
-  const ehiFiles = readRows_(SHEET_EHI_FILES)
-    .filter(row =>
-      isActive_(row.active) &&
-      freePackageIds.has(String(row.packageId || ""))
-    )
-    .map(row => ({
-      id: String(row.id || ""),
-      packageId: String(row.packageId || ""),
-      name: String(row.name || ""),
-      fileName: String(row.fileName || ""),
-      downloadUrl: getEhiDownloadUrl_(String(row.fileId || ""))
-    }));
-
   return {
     packages: packages,
-    configs: configs,
-    ehiFiles: ehiFiles
+    configs: configs
   };
 }
 
@@ -331,20 +343,9 @@ function getAdminData(token) {
     createdAt: safeDate_(row.createdAt)
   }));
 
-  const ehiFiles = readRows_(SHEET_EHI_FILES).map(row => ({
-    id: String(row.id || ""),
-    packageId: String(row.packageId || ""),
-    name: String(row.name || ""),
-    fileName: String(row.fileName || ""),
-    fileId: String(row.fileId || ""),
-    active: isActive_(row.active),
-    createdAt: safeDate_(row.createdAt)
-  }));
-
   return {
     packages: packages,
-    configs: configs,
-    ehiFiles: ehiFiles
+    configs: configs
   };
 }
 
@@ -452,24 +453,6 @@ function deletePackage(token, id) {
     }
   }
 
-  const ehiSheet = getSheet_(SHEET_EHI_FILES);
-  const ehiHeaders = getHeaders_(ehiSheet);
-  const ehiPackageIdColumn = ehiHeaders.indexOf("packageId") + 1;
-  const ehiFileIdColumn = ehiHeaders.indexOf("fileId") + 1;
-
-  if (ehiPackageIdColumn > 0 && ehiSheet.getLastRow() >= 2) {
-    const ehiRows = ehiSheet.getRange(2, 1, ehiSheet.getLastRow() - 1, ehiHeaders.length).getValues();
-    for (let i = ehiRows.length - 1; i >= 0; i--) {
-      if (String(ehiRows[i][ehiPackageIdColumn - 1]) === String(id)) {
-        const fileId = ehiFileIdColumn > 0 ? String(ehiRows[i][ehiFileIdColumn - 1] || "") : "";
-        if (fileId) {
-          try { DriveApp.getFileById(fileId).setTrashed(true); } catch (e) {}
-        }
-        ehiSheet.deleteRow(i + 2);
-      }
-    }
-  }
-
   packageSheet.deleteRow(packageRow);
 
   return { success: true };
@@ -563,102 +546,6 @@ function deleteConfig(token, id) {
 }
 
 /* ==============================================
-   13. EHI FILE MANAGEMENT
-============================================== */
-
-function addEhiFile(token, packageId, name, fileName, dataUrl) {
-  verifyAdmin_(token);
-
-  packageId = clean_(packageId);
-  name = clean_(name);
-  fileName = clean_(fileName);
-  dataUrl = String(dataUrl || "");
-
-  if (!packageId) throw new Error("Please select a package.");
-  if (!name) throw new Error("Please enter an EHI file name.");
-  if (!fileName) throw new Error("Please select an EHI file.");
-  if (!dataUrl || dataUrl.indexOf("base64,") === -1) {
-    throw new Error("Invalid EHI file data.");
-  }
-
-  const packageRow = findRow_(getSheet_(SHEET_PACKAGES), packageId);
-  if (!packageRow) throw new Error("Selected package does not exist.");
-
-  if (!/\.ehi$/i.test(fileName)) {
-    throw new Error("Only .ehi files are allowed.");
-  }
-
-  const match = dataUrl.match(/^data:([^;]+);base64,(.*)$/s);
-  if (!match) throw new Error("Invalid file format.");
-
-  const mimeType = match[1] || "application/octet-stream";
-  const bytes = Utilities.base64Decode(match[2]);
-
-  if (bytes.length > 15 * 1024 * 1024) {
-    throw new Error("EHI file is too large. Maximum size is 15 MB.");
-  }
-
-  const folder = getEhiFolder_();
-  const blob = Utilities.newBlob(bytes, mimeType, fileName);
-  const file = folder.createFile(blob);
-
-  // Customers need direct download access from the website.
-  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-
-  const id = Utilities.getUuid();
-  appendObjectRow_(getSheet_(SHEET_EHI_FILES), {
-    id: id,
-    packageId: packageId,
-    name: name,
-    fileId: file.getId(),
-    fileName: fileName,
-    mimeType: mimeType,
-    active: true,
-    createdAt: new Date()
-  });
-
-  return { success: true, id: id, fileName: fileName };
-}
-
-function deleteEhiFile(token, id) {
-  verifyAdmin_(token);
-
-  const sheet = getSheet_(SHEET_EHI_FILES);
-  const row = findRow_(sheet, id);
-  if (!row) throw new Error("EHI file not found.");
-
-  const headers = getHeaders_(sheet);
-  const fileIdColumn = headers.indexOf("fileId") + 1;
-  const fileId = fileIdColumn > 0 ? String(sheet.getRange(row, fileIdColumn).getValue() || "") : "";
-
-  if (fileId) {
-    try { DriveApp.getFileById(fileId).setTrashed(true); } catch (e) {}
-  }
-
-  sheet.deleteRow(row);
-  return { success: true };
-}
-
-function getEhiFolder_() {
-  const props = PropertiesService.getScriptProperties();
-  const savedId = props.getProperty(EHI_FOLDER_PROPERTY);
-
-  if (savedId) {
-    try { return DriveApp.getFolderById(savedId); } catch (e) {}
-  }
-
-  const folders = DriveApp.getFoldersByName("VOID X VPN EHI FILES");
-  const folder = folders.hasNext() ? folders.next() : DriveApp.createFolder("VOID X VPN EHI FILES");
-  props.setProperty(EHI_FOLDER_PROPERTY, folder.getId());
-  return folder;
-}
-
-function getEhiDownloadUrl_(fileId) {
-  if (!fileId) return "";
-  return "https://drive.google.com/uc?export=download&id=" + encodeURIComponent(fileId);
-}
-
-/* ==============================================
    13. DATABASE HELPERS
 ============================================== */
 
@@ -727,17 +614,8 @@ function validatePackage_(data) {
     throw new Error("Package information is missing.");
   }
 
-  const networks = [
-    "DIALOG",
-    "MOBITEL",
-    "HUTCH",
-    "AIRTEL"
-  ];
-
-  const accessTypes = [
-    "FREE",
-    "PAID"
-  ];
+  const networks = ["DIALOG", "MOBITEL", "HUTCH", "AIRTEL"];
+  const accessTypes = ["FREE", "PAID"];
 
   const network = clean_(data.network).toUpperCase();
   const accessType = clean_(data.accessType).toUpperCase();
