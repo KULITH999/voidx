@@ -581,11 +581,12 @@
               </div>
 
               <div class="field">
-                <label>Config Type</label>
+                <label>App</label>
                 <select id="configType" required>
-                  <option value="">Select Type</option>
-                  <option>CODE</option>
-                  <option>EHI</option>
+                  <option value="">Select App</option>
+                  <option value="NETMOD">NetMod (code)</option>
+                  <option value="NPV">NPV Tunnel (code)</option>
+                  <option value="EHI">HTTP Injector (file)</option>
                 </select>
               </div>
 
@@ -595,10 +596,19 @@
                        placeholder="Config name">
               </div>
 
-              <div class="field full">
+              <div class="field full" id="configContentField">
                 <label>Config Content</label>
                 <textarea id="configContent" required
-                          placeholder="Paste your CODE / EHI content here"></textarea>
+                          placeholder="Paste your config code here"></textarea>
+              </div>
+
+              <div class="field full hidden" id="ehiFileField">
+                <label>EHI File</label>
+                <input id="ehiFile" type="file" accept=".ehi"
+                       style="padding:10px">
+                <div class="muted" style="margin-top:7px;font-size:13px">
+                  Upload an .ehi file. Maximum size: 15 MB.
+                </div>
               </div>
             </div>
 
@@ -616,6 +626,11 @@
           <h2>ALL CONFIGURATIONS</h2>
           <div class="table-wrap" id="configTable"></div>
         </div>
+
+        <div class="panel">
+          <h2>ALL EHI FILES</h2>
+          <div class="table-wrap" id="ehiTable"></div>
+        </div>
       </section>
 
     </main>
@@ -625,7 +640,15 @@
 
 <script>
   let adminToken = "";
-  let adminData = { packages: [], configs: [] };
+  let adminData = { packages: [], configs: [], ehiFiles: [] };
+
+  // Display names for the app types (old CODE configs count as NetMod)
+  const TYPE_LABELS = {
+    NETMOD: "NETMOD",
+    NPV: "NPV TUNNEL",
+    EHI: "HTTP INJECTOR",
+    CODE: "NETMOD (old)"
+  };
 
   const $ = id => document.getElementById(id);
 
@@ -700,12 +723,14 @@
 
     adminData = {
       packages: Array.isArray(data?.packages) ? data.packages : [],
-      configs: Array.isArray(data?.configs) ? data.configs : []
+      configs: Array.isArray(data?.configs) ? data.configs : [],
+      ehiFiles: Array.isArray(data?.ehiFiles) ? data.ehiFiles : []
     };
 
     renderDashboard();
     renderPackages();
     renderConfigs();
+    renderEhiFiles();
     updatePackageDropdown();
   }
 
@@ -937,6 +962,18 @@
   }
 
   // CONFIG MANAGEMENT
+  function toggleConfigType() {
+    const type = $("configType").value;
+    const isEhi = type === "EHI";
+
+    $("configContentField").classList.toggle("hidden", isEhi);
+    $("ehiFileField").classList.toggle("hidden", !isEhi);
+    $("configContent").required = !isEhi;
+    $("ehiFile").required = isEhi && !$("configId").value;
+  }
+
+  $("configType").addEventListener("change", toggleConfigType);
+
   function updatePackageDropdown() {
     const select = $("configPackage");
     const currentValue = select.value;
@@ -961,28 +998,51 @@
     event.preventDefault();
 
     const id = $("configId").value;
-
-    const data = {
-      id,
-      packageId: $("configPackage").value,
-      type: $("configType").value,
-      name: $("configName").value.trim(),
-      content: $("configContent").value
-    };
-
+    const type = $("configType").value;
+    const packageId = $("configPackage").value;
+    const name = $("configName").value.trim();
     const button = $("configSave");
+
     button.disabled = true;
 
     try {
-      if (id) {
-        const existing = adminData.configs.find(c => c.id === id);
-        data.active = existing ? existing.active : true;
+      if (type === "EHI") {
+        if (id) {
+          throw new Error("Existing EHI files are managed in the EHI FILES table. Delete and upload again to replace a file.");
+        }
 
-        await callServer("updateConfig", adminToken, data);
-        showToast("Configuration updated.");
+        const file = $("ehiFile").files[0];
+        if (!file) throw new Error("Please select an .ehi file.");
+        if (!/\.ehi$/i.test(file.name)) throw new Error("Only .ehi files are allowed.");
+        if (file.size > 15 * 1024 * 1024) throw new Error("EHI file is too large. Maximum size is 15 MB.");
+
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error("Could not read the selected file."));
+          reader.readAsDataURL(file);
+        });
+
+        await callServer("addEhiFile", adminToken, packageId, name || file.name.replace(/\.ehi$/i, ""), file.name, dataUrl);
+        showToast("EHI file uploaded successfully.");
       } else {
-        await callServer("addConfig", adminToken, data);
-        showToast("Configuration added.");
+        const data = {
+          id,
+          packageId,
+          type,
+          name,
+          content: $("configContent").value
+        };
+
+        if (id) {
+          const existing = adminData.configs.find(c => c.id === id);
+          data.active = existing ? existing.active : true;
+          await callServer("updateConfig", adminToken, data);
+          showToast("Configuration updated.");
+        } else {
+          await callServer("addConfig", adminToken, data);
+          showToast("Configuration added.");
+        }
       }
 
       resetConfigForm();
@@ -1007,7 +1067,7 @@
         <thead>
           <tr>
             <th>PACKAGE</th>
-            <th>TYPE</th>
+            <th>APP</th>
             <th>NAME</th>
             <th>STATUS</th>
             <th>ACTIONS</th>
@@ -1023,7 +1083,7 @@
               <tr>
                 <td>${escapeHtml(p ? p.name : "Unknown package")}</td>
                 <td>
-                  <span class="pill">${escapeHtml(c.type)}</span>
+                  <span class="pill">${escapeHtml(TYPE_LABELS[c.type] || c.type)}</span>
                 </td>
                 <td>${escapeHtml(c.name)}</td>
                 <td>
@@ -1043,15 +1103,65 @@
       </table>`;
   }
 
+  function renderEhiFiles() {
+    if (!adminData.ehiFiles.length) {
+      $("ehiTable").innerHTML = '<div class="empty">No EHI files found.</div>';
+      return;
+    }
+
+    $("ehiTable").innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>PACKAGE</th>
+            <th>NAME</th>
+            <th>FILE</th>
+            <th>STATUS</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${adminData.ehiFiles.map(file => {
+            const p = adminData.packages.find(item => item.id === file.packageId);
+            return `
+              <tr>
+                <td>${escapeHtml(p ? p.name : "Unknown package")}</td>
+                <td>${escapeHtml(file.name)}</td>
+                <td>${escapeHtml(file.fileName)}</td>
+                <td><span class="pill ${file.active ? "green" : ""}">${file.active ? "ACTIVE" : "INACTIVE"}</span></td>
+                <td>
+                  <button class="btn btn-danger btn-small" onclick="removeEhiFile('${escapeHtml(file.id)}')">DELETE</button>
+                </td>
+              </tr>`;
+          }).join("")}
+        </tbody>
+      </table>`;
+  }
+
+  async function removeEhiFile(id) {
+    if (!confirm("Delete this EHI file?")) return;
+
+    try {
+      await callServer("deleteEhiFile", adminToken, id);
+      showToast("EHI file deleted.");
+      resetConfigForm();
+      await loadData();
+    } catch (error) {
+      showToast(error.message, true);
+    }
+  }
+
   function editConfig(id) {
     const c = adminData.configs.find(item => item.id === id);
     if (!c) return;
 
     $("configId").value = c.id;
     $("configPackage").value = c.packageId;
-    $("configType").value = c.type;
+    // old CODE configs are treated as NetMod
+    $("configType").value = c.type === "CODE" ? "NETMOD" : c.type;
     $("configName").value = c.name;
     $("configContent").value = c.content;
+    toggleConfigType();
 
     $("configFormTitle").textContent = "EDIT CONFIGURATION";
     $("configSave").textContent = "SAVE CHANGES";
@@ -1078,6 +1188,8 @@
 
     $("configFormTitle").textContent = "ADD NEW CONFIGURATION";
     $("configSave").textContent = "ADD CONFIG";
+    $("ehiFile").value = "";
+    toggleConfigType();
   }
 
   // LOGOUT
@@ -1089,7 +1201,7 @@
     }
 
     adminToken = "";
-    adminData = { packages: [], configs: [] };
+    adminData = { packages: [], configs: [], ehiFiles: [] };
 
     $("dashboard").classList.add("hidden");
     $("loginScreen").classList.remove("hidden");
